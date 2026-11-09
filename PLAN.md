@@ -113,8 +113,9 @@ links: [map]
 files: [bin/**, public/**]
 - [ ] Restrict Map actions to trusted local requests {#runs-request-boundary}
   tech: repository review reproduced missing Host/Origin validation and mutation authentication; add coverage for UI actions, hooks and cross-board relays.
-- [ ] Keep Map and Kitchen hook setup independent {#runs-distinct-hooks}
-  tech: Map's substring detection mistakes Kitchen's relay for its own; verify both installation orders and preserve unrelated hooks.
+- [x] Keep Map and Kitchen hook setup independent {#runs-distinct-hooks}
+  by: hermes
+  tech: bin/map-hooks.mjs matches Map command hooks exactly for setup and status; test/map-hooks.test.mjs verifies both installation orders, unrelated hooks and repeat installation without launching a daemon.
 - [x] Receive hook events and track sessions {#runs-endpoint}
   by: claude
   tech: /events endpoint; per-session todos, current tool, recent calls
