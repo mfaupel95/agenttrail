@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import os from 'node:os'
 import crypto from 'node:crypto'
+import { mapHookEvents, mapHookCommand, hasMapHook, mapHooksInstalled } from './map-hooks.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -385,7 +386,8 @@ function lintPlan() {
 let hooksInstalledCache = { at: 0, val: false }
 function hooksInstalled() {
   if (Date.now() - hooksInstalledCache.at < 30000) return hooksInstalledCache.val
-  const val = safeRead(path.join(repo, '.claude', 'settings.local.json')).includes('agenttrail')
+  let val = false
+  try { val = mapHooksInstalled(JSON.parse(safeRead(path.join(repo, '.claude', 'settings.local.json'))), mapHookCommand(fileURLToPath(import.meta.url))) } catch {}
   hooksInstalledCache = { at: Date.now(), val }
   return val
 }
@@ -742,12 +744,12 @@ function installHooks() {
   const sp = path.join(dir, 'settings.local.json')
   let cfg = {}
   try { cfg = JSON.parse(fs.readFileSync(sp, 'utf8')) } catch {}
-  const cmd = `node ${JSON.stringify(fileURLToPath(import.meta.url))} hook`
+  const cmd = mapHookCommand(fileURLToPath(import.meta.url))
   cfg.hooks = cfg.hooks || {}
   let added = 0
-  for (const ev of ['PreToolUse', 'PostToolUse', 'Stop', 'SessionStart', 'SubagentStop']) {
+  for (const ev of mapHookEvents) {
     const list = cfg.hooks[ev] = cfg.hooks[ev] || []
-    const present = JSON.stringify(list).includes('agenttrail')
+    const present = hasMapHook(list, cmd)
     if (!present) { list.push({ matcher: '*', hooks: [{ type: 'command', command: cmd }] }); added++ }
   }
   if (added) {
